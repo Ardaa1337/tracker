@@ -1,0 +1,26 @@
+name: SteamDB Screenshot
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # her 2 saatte bir çalışır
+  workflow_dispatch:
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install selenium discord.py
+          sudo apt-get update
+          sudo apt-get install -y chromium-chromedriver
+      - name: Run script
+        env:
+          STEAMDB_URL: ${{ secrets.STEAMDB_URL }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python steamdb_bot.py
