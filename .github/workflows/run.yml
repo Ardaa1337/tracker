@@ -1,8 +1,8 @@
-name: SteamDB Screenshot
+name: Steam Profile Screenshot
 
 on:
   schedule:
-    - cron: "0 */2 * * *"   # 2 saatte bir
+    - cron: "0 */2 * * *"  # Her 2 saatte bir
   workflow_dispatch:
 
 jobs:
@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -20,13 +19,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install selenium requests
+          pip install -r requirements.txt
+          playwright install chromium
 
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Run script
+      - name: Run bot
         env:
-          STEAMDB_URL: ${{ secrets.STEAMDB_URL }}
+          STEAM_PROFILE_URL: ${{ secrets.STEAM_PROFILE_URL }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: python steamdb_bot.py
+        run: python steam_profile_bot.py
