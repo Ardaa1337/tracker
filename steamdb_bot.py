@@ -1,35 +1,33 @@
 import os
 import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from playwright.sync_api import sync_playwright
 
-STEAMDB_URL = os.environ["STEAMDB_URL"]
+STEAM_PROFILE_URL = os.environ["STEAM_PROFILE_URL"]
 DISCORD_WEBHOOK = os.environ["DISCORD_WEBHOOK"]
-OUTPUT_FILE = "steamdb.png"
+OUTPUT_FILE = "steam_profile.png"
 
 
 def capture_screenshot():
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page(viewport={"width": 1400, "height": 900})
 
-    driver = webdriver.Chrome(options=options)
-    driver.set_window_size(1400, 900)
-    driver.get(STEAMDB_URL)
+        page.goto(STEAM_PROFILE_URL, wait_until="networkidle")
+        page.wait_for_timeout(5000)  # İçerik tam yüklensin
 
-    # Sayfanın tam yüklenmesi için küçük bekleme
-    driver.implicitly_wait(10)
+        # Profilde biraz scroll yap (örneğin 1200px aşağı)
+        page.mouse.wheel(0, 1200)
+        page.wait_for_timeout(2000)
 
-    driver.save_screenshot(OUTPUT_FILE)
-    driver.quit()
+        page.screenshot(path=OUTPUT_FILE, full_page=True)
+        browser.close()
 
 
 def send_to_discord():
     with open(OUTPUT_FILE, "rb") as f:
         r = requests.post(
             DISCORD_WEBHOOK,
-            files={"file": ("steamdb.png", f, "image/png")}
+            files={"file": ("steam_profile.png", f, "image/png")},
         )
     r.raise_for_status()
 
