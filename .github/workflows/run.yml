@@ -26,4 +26,5 @@ jobs:
         env:
           STEAM_PROFILE_URL: ${{ secrets.STEAM_PROFILE_URL }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: python steam_profile_bot.py
+        run: python steamdb_bot.py
+
