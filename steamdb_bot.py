@@ -1,31 +1,39 @@
 import os
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from discord import Webhook, RequestsWebhookAdapter
 
-# --------- Ayarlar ----------
-STEAMDB_URL = os.getenv("STEAMDB_URL")  # Örn: https://steamdb.info/calculator/76561199883458792/
-DISCORD_WEBHOOK = os.getenv("DISCORD_WEBHOOK")  # Discord webhook URL
-OUTPUT_FILE = "screenshot.png"
-# ------------------------------
+STEAMDB_URL = os.environ["STEAMDB_URL"]
+DISCORD_WEBHOOK = os.environ["DISCORD_WEBHOOK"]
+OUTPUT_FILE = "steamdb.png"
 
-def capture_screenshot(url, output_file=OUTPUT_FILE):
+
+def capture_screenshot():
     options = Options()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(options=options)
-    driver.set_window_size(1200, 800)
-    driver.get(url)
-    driver.save_screenshot(output_file)
-    driver.quit()
-    return output_file
 
-def send_discord_image(image_path):
-    webhook = Webhook.from_url(DISCORD_WEBHOOK, adapter=RequestsWebhookAdapter())
-    with open(image_path, "rb") as f:
-        webhook.send(file=f)
+    driver = webdriver.Chrome(options=options)
+    driver.set_window_size(1400, 900)
+    driver.get(STEAMDB_URL)
+
+    # Sayfanın tam yüklenmesi için küçük bekleme
+    driver.implicitly_wait(10)
+
+    driver.save_screenshot(OUTPUT_FILE)
+    driver.quit()
+
+
+def send_to_discord():
+    with open(OUTPUT_FILE, "rb") as f:
+        r = requests.post(
+            DISCORD_WEBHOOK,
+            files={"file": ("steamdb.png", f, "image/png")}
+        )
+    r.raise_for_status()
+
 
 if __name__ == "__main__":
-    screenshot = capture_screenshot(STEAMDB_URL)
-    send_discord_image(screenshot)
+    capture_screenshot()
+    send_to_discord()
